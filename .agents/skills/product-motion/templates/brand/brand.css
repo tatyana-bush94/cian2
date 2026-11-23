@@ -1,0 +1,27 @@
+/* product-motion · brand/brand.css — бренд-профиль ролика.
+   Нейтральный профиль по умолчанию. Для продукта замените значения токенами из его кода
+   (CSS-переменные, тема, tailwind.config, дизайн-токены) — см. references/brand.md.
+   Шрифты — только локальные файлы в brand/fonts (никаких CDN во время рендера).
+   Manrope — SIL Open Font License 1.1 (fonts/Manrope-OFL.txt), кириллица и латиница. */
+@font-face{font-family:'Brand Sans';src:url(fonts/Manrope-Variable.ttf) format('truetype');font-weight:200 800;font-style:normal;font-display:block}
+
+:root{
+  --font:'Brand Sans',system-ui,sans-serif;
+  --w-regular:400; --w-medium:500; --w-bold:650;   /* веса, которые реально есть в файлах шрифта */
+
+  --accent:#4F5BD5;        /* ЕДИНСТВЕННЫЙ акцент: главная кнопка, реплики пользователя, его оценка */
+  --accent-ink:#FFFFFF;    /* текст на акценте */
+  --ink:#16181D; --ink2:#5D6470; --ink3:#9AA0AA;   /* текст: основной / вторичный / подписи */
+  --line:#E7E9EC;          /* границы */
+  --line2:#E0E3E7;         /* границы кнопок и полей */
+  --soft:#F2F3F5;          /* подложки чипов, тегов */
+  --dark:#1D2026;          /* включённые состояния, метки, тосты */
+  --surface:#FFFFFF;       /* интерфейс, белые экраны, финальная карточка */
+  --bg:#EEF0F2;            /* фон кадра вокруг интерфейса */
+  --dim:16,20,26;          /* затемнение кадра (r,g,b) */
+  --sub-bg:rgba(22,24,29,.86);   /* подложка субтитров */
+  --cursor:#16181D;
+  --r-app:20px;            /* радиус полотна */
+  /* перелив обводки поля (E.grad): цвета по кругу, первый = последний */
+  --ring-stops:#3D8BFF, #6C7BFF, #8B6CFF, #19C3A7, #3D8BFF;
+}

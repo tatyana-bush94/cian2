@@ -1,0 +1,86 @@
+{
+  "source": "http://127.0.0.1:5183/auction/app",
+  "viewport": [
+    390,
+    820
+  ],
+  "deviceScaleFactor": 2,
+  "screens": {
+    "conditions": {
+      "height": 1349,
+      "controls": {
+        "price": {
+          "x": 55,
+          "y": 671.25,
+          "width": 280,
+          "height": 22
+        },
+        "review": {
+          "x": 42,
+          "y": 983.641,
+          "width": 306,
+          "height": 56
+        }
+      }
+    },
+    "conditions-focused": {
+      "height": 1349,
+      "controls": {
+        "price": {
+          "x": 55,
+          "y": 671.25,
+          "width": 280,
+          "height": 22
+        },
+        "review": {
+          "x": 42,
+          "y": 983.641,
+          "width": 306,
+          "height": 56
+        }
+      }
+    },
+    "review": {
+      "height": 1435,
+      "controls": {
+        "agree": {
+          "x": 46,
+          "y": 946.5,
+          "width": 234.203,
+          "height": 32
+        },
+        "publish": {
+          "x": 42,
+          "y": 998.5,
+          "width": 306,
+          "height": 56
+        }
+      }
+    },
+    "review-agreed": {
+      "height": 1435,
+      "controls": {
+        "agree": {
+          "x": 46,
+          "y": 946.5,
+          "width": 234.203,
+          "height": 32
+        },
+        "publish": {
+          "x": 42,
+          "y": 998.5,
+          "width": 306,
+          "height": 56
+        }
+      }
+    },
+    "pending": {
+      "height": 1512,
+      "controls": {}
+    },
+    "published": {
+      "height": 1353,
+      "controls": {}
+    }
+  }
+}

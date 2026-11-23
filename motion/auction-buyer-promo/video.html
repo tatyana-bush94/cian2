@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Аукцион квартиры · Покупатель · Циан · 15 секунд</title>
+  <link rel="stylesheet" href="brand/brand.css">
+  <link rel="stylesheet" href="base.css">
+  <script src="plan.js"></script>
+  <script src="screens.js"></script>
+  <script src="cues.js"></script>
+  <script src="tmap.js"></script>
+  <script src="engine.js"></script>
+  <style>
+    #app,#app2{background:transparent;border:0;border-radius:0;box-shadow:none;overflow:visible}
+    .backdrop{position:absolute;inset:0;background:#f6f8fc}
+    .halo{position:absolute;width:1050px;height:1050px;left:960px;top:10px;border-radius:50%;background:#ecf2fe}
+    .orbit{position:absolute;width:1170px;height:1170px;left:900px;top:-50px;border:1px solid #e0e8f8;border-radius:50%}
+    .brand{position:absolute;left:120px;top:80px;width:180px;height:45px;object-fit:contain}
+    .category{position:absolute;left:120px;top:164px;font-size:17px;line-height:24px;font-weight:600;letter-spacing:3.2px;color:var(--accent)}
+    .copy{position:absolute;left:116px;top:310px;width:890px}
+    .copy h1{font-size:96px;line-height:1.065;font-weight:650;letter-spacing:-5.6px;color:var(--ink)}
+    .copy p{font-size:27px;line-height:1.6;font-weight:400;letter-spacing:-.55px;color:#76869f;margin-top:34px;max-width:760px}
+    #copy1 h1{font-size:102px}
+    #copy2 h1{font-size:108px}
+    #copy3 h1{font-size:110px}
+    .copy .blue{color:var(--accent)}
+    .progress{position:absolute;left:120px;top:844px;display:flex;gap:32px}
+    .phase{width:213px;color:#9ca9be}
+    .phase .label{display:flex;gap:12px;align-items:center;font-size:18px;font-weight:500}
+    .phase .num{font-size:13px;font-weight:650;letter-spacing:1px}
+    .phase .track{width:100%;height:3px;background:#dfe6f2;margin-top:19px;overflow:hidden}
+    .phase .fill{height:100%;width:100%;background:var(--accent);transform-origin:left center}
+    .prototype{position:absolute;left:120px;bottom:59px;display:flex;gap:10px;align-items:center;font-size:15px;color:#93a1b8;letter-spacing:.2px}
+    .prototype:before{content:'';width:6px;height:6px;background:#aab8ce;border-radius:50%}
+    #phone{position:absolute;left:0;top:0;width:438px;height:918px;transform-origin:0 0;border-radius:65px;background:linear-gradient(135deg,#515767 0%,#161b25 15%,#111723 85%,#444b5c 100%);padding:9px;box-shadow:0 42px 70px -30px #11275050,0 0 0 1px #11192c}
+    .bezel{position:absolute;inset:8px;background:#101522;border-radius:58px;border:1px solid #596274}
+    .glass{position:absolute;left:17px;top:17px;width:404px;height:884px;border-radius:49px;overflow:hidden;background:#f8faff}
+    .status{height:51px;background:#fff;position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:6px 27px 0 29px;font-size:14px;font-weight:650}
+    .island{position:absolute;left:144px;top:14px;width:116px;height:28px;border-radius:18px;background:#090c12}
+    .island:after{content:'';position:absolute;right:11px;top:9px;width:10px;height:10px;border-radius:50%;background:#14233a}
+    .statusIcons{display:flex;gap:5px;align-items:center}
+    .battery{width:23px;height:11px;border:1px solid #9095a2;border-radius:3px;padding:1.5px}
+    .battery:after{content:'';display:block;width:100%;height:100%;border-radius:1px;background:#101a34}
+    .viewport{position:absolute;left:7px;top:51px;width:390px;height:800px;overflow:hidden;background:#f8faff}
+    #screenContent{position:absolute;left:0;top:0;width:390px;transform-origin:0 0}
+    .capture{position:absolute;left:0;top:0;width:390px;height:auto;display:block}
+    .home{position:absolute;bottom:10px;left:138px;width:128px;height:5px;border-radius:4px;background:#101a34;z-index:3}
+    .button{position:absolute;width:3px;background:#5c6473;border-radius:4px}
+    .button.one{height:30px;left:-3px;top:133px}
+    .button.two{height:64px;left:-3px;top:191px}
+    .button.three{height:64px;left:-3px;top:273px}
+    .button.four{height:91px;right:-3px;top:224px}
+    .target{position:absolute;pointer-events:none;opacity:0}
+    #priceTarget{left:55px;top:671.25px;width:280px;height:22px}
+    #reviewTarget{left:42px;top:983.641px;width:306px;height:56px}
+    #agreeTarget{left:46px;top:946.5px;width:20px;height:32px}
+    #publishTarget{left:42px;top:998.5px;width:306px;height:56px}
+    #cursor{width:29px!important;height:29px!important;filter:drop-shadow(0 2px 3px #061a3740)}
+    #endcard{display:none}
+  </style>
+</head>
+<body>
+<div id="frame">
+  <div class="backdrop"></div><div class="halo"></div><div class="orbit"></div>
+  <div class="layer" id="stage"><div id="app">
+    <img class="brand" src="brand/logos/wordmark.svg" alt="Циан">
+    <div class="category">АУКЦИОН КВАРТИРЫ</div>
+    <section id="copy0" class="copy"><h1>Я<br><span class="blue">покупатель.</span></h1><p>2-комн. квартира, 64 м²<br>Москва, Ходынский бульвар, 2</p></section>
+    <section id="copy1" class="copy"><h1>Ваша<br><span class="blue">ставка.</span></h1><p>Шаг 50 000 ₽</p></section>
+    <section id="copy2" class="copy"><h1>Подтвердите<br><span class="blue">ставку.</span></h1><p>Ставка участвует только<br>после подтверждения.</p></section>
+    <section id="copy3" class="copy"><h1>Ваша ставка<br><span class="blue">лидирует.</span></h1><p>Следите за ходом аукциона.</p></section>
+    <div class="progress">
+      <div class="phase" id="phase0"><div class="label"><span class="num">01</span>Квартира</div><div class="track"><div class="fill"></div></div></div>
+      <div class="phase" id="phase1"><div class="label"><span class="num">02</span>Ставка</div><div class="track"><div class="fill"></div></div></div>
+      <div class="phase" id="phase2"><div class="label"><span class="num">03</span>Результат</div><div class="track"><div class="fill"></div></div></div>
+    </div>
+    <div class="prototype">Мобильный прототип</div>
+    <div id="phone">
+      <div class="bezel"></div><i class="button one"></i><i class="button two"></i><i class="button three"></i><i class="button four"></i>
+      <div class="glass">
+        <div class="status"><span>9:41</span><span class="island"></span><span class="statusIcons"><svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx=".5"/><rect x="5" y="5" width="3" height="7" rx=".5"/><rect x="10" y="2" width="3" height="10" rx=".5"/><rect x="15" width="2" height="12" rx=".5"/></svg><svg width="17" height="13" viewBox="0 0 20 16" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M2 5a12 12 0 0 1 16 0M5 8.5a7.5 7.5 0 0 1 10 0M8 12a3 3 0 0 1 4 0"/></svg><i class="battery"></i></span></div>
+        <div class="viewport"><div id="screenContent">
+          <img id="screen0" class="capture" src="assets/conditions.png" alt="Квартира и текущая ставка">
+          <img id="screen1" class="capture" src="assets/conditions-focused.png" alt="Ставка 14 350 000 рублей">
+          <img id="screen2" class="capture" src="assets/review.png" alt="Подтвердите ставку">
+          <img id="screen3" class="capture" src="assets/review.png" alt="Подтверждение ставки">
+          <img id="screen4" class="capture" src="assets/pending.png" alt="Отправляем вашу ставку">
+          <img id="screen5" class="capture" src="assets/published.png" alt="Ваша ставка лидирует">
+          <i id="priceTarget" class="target"></i><i id="reviewTarget" class="target"></i><i id="agreeTarget" class="target"></i><i id="publishTarget" class="target"></i>
+        </div></div><div class="home"></div>
+      </div>
+    </div>
+  </div></div>
+  <div id="fdim"></div><div class="layer" id="stage2"><div id="app2"></div></div><div id="endcard"></div>
+</div>
+<script>
+const T = PLAN.events;
+function mix(a,b,p){return a+(b-a)*p}
+function shotIndex(t){return t<T.reviewScreen?(t>=T.priceFocus?1:0):t<T.publishClick?2:t<T.publishedScreen?4:5}
+function phoneAt(t,E){
+  const p=E.eio(E.lin(t,2.35,3.35));
+  const q=E.eio(E.lin(t,11.15,12.65));
+  const drift=E.eout(E.lin(t,0,.8));
+  const modal=t>=T.reviewScreen&&t<T.publishClick;
+  return {x:mix(mix(1160,1100,p),1144,q),y:mix(mix(88+(1-drift)*22,-70,p),52,q),s:mix(mix(1,1.4,p),1.04,q),scroll:modal?0:SCREENS.modalBackgroundScroll*E.eio(E.lin(t,2.5,3.4))};
+}
+E.start({
+  build(E){
+    const controls={priceTarget:SCREENS.screens.conditions.controls.plus,reviewTarget:SCREENS.screens.conditions.controls.bid,publishTarget:SCREENS.screens.review.controls.confirm};
+    for(const [id,r] of Object.entries(controls))E.css(E.$(id),{left:r.x+'px',top:r.y+'px',width:r.width+'px',height:r.height+'px'});
+  },
+  setup(E){
+    E.measureAt(4.35); const price=E.rect('priceTarget'),review=E.rect('reviewTarget');
+    E.measureAt(8.8); const publish=E.rect('publishTarget');
+    E.cursor([
+      [0,price.cx+90,price.cy+100,0],
+      [3.7,price.cx+90,price.cy+80,0],[4.15,price.cx,price.cy,1],[4.58,price.cx,price.cy,1],[4.95,price.cx+65,price.cy-40,0],
+      [5.98,review.cx+95,review.cy+50,0],[6.47,review.cx,review.cy,1],[6.82,review.cx,review.cy,1],[7.12,review.cx+60,review.cy+15,0],
+      [8.4,publish.cx+90,publish.cy+45,0],[8.97,publish.cx,publish.cy,1],[9.28,publish.cx,publish.cy,1],[9.66,publish.cx+65,publish.cy+35,0],[15,publish.cx+65,publish.cy+35,0]
+    ]);
+    E.clicks([T.priceFocus,T.reviewClick,T.publishClick]);
+  },
+  scene(t,E){
+    const p=phoneAt(t,E);
+    E.css(E.$('phone'),{transform:`translate(${p.x}px,${p.y}px) scale(${p.s})`});
+    E.$('screenContent').style.transform=`translateY(${-p.scroll}px)`;
+    const index=shotIndex(t);
+    for(let i=0;i<6;i++)E.show(E.$('screen'+i),i===index);
+    const cuts=[0,2.65,T.reviewScreen,T.publishedScreen];
+    const ends=[2.65,T.reviewScreen,T.publishedScreen,16];
+    for(let i=0;i<4;i++){
+      const a=cuts[i],b=ends[i];
+      const alpha=(i===0?1:E.eout(E.lin(t,a,a+.36)))*(i===3?1:1-E.eio(E.lin(t,b-.28,b)));
+      E.css(E.$('copy'+i),{opacity:alpha,transform:`translateY(${(1-(i===0?E.eout(E.lin(t,0,.65)):E.eout(E.lin(t,a,a+.42))))*20}px)`});
+    }
+    const active=t<2.65?0:t<T.publishedScreen?1:2;
+    for(let i=0;i<3;i++){
+      E.$('phase'+i).style.color=i===active?'#0054fd':i<active?'#536d9a':'#a1aec3';
+      const progress=i<active?1:i>active?0:i===0?E.lin(t,0,2.65):i===1?E.lin(t,2.65,T.publishedScreen):E.lin(t,T.publishedScreen,12.6);
+      E.$('phase'+i).querySelector('.fill').style.transform=`scaleX(${progress})`;
+    }
+  }
+});
+</script>
+</body>
+</html>

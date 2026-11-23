@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>product-motion · starter</title>
+<!-- Порядок важен: бренд-профиль → стиль → план → (опц.) озвучка cues.js → (опц.) карта времени tmap.js → анимация обработки → движок -->
+<!-- ДЕМО-СОДЕРЖАНИЕ: «Умный поиск» в вымышленном продукте Demo. Замените экраны, тексты и данные фичей реального продукта. -->
+<link rel="stylesheet" href="brand/brand.css">
+<link rel="stylesheet" href="base.css">
+<script src="plan.js"></script>
+<script src="cues.js" onerror="void 0"></script>
+<script src="tmap.js" onerror="void 0"></script>
+<script src="processing.js"></script>
+<script src="engine.js"></script>
+<style>
+/* ---- стили сцен этого ролика (общие компоненты — в base.css) ---- */
+#intro{z-index:1;background:var(--bg)}
+#grid{position:absolute;top:0}
+.gc{position:absolute;background:#fff;border-radius:16px;border:1px solid #E3E6E9;padding:20px}
+.gc .a{width:42px;height:42px;border-radius:12px;background:#E3E6E9}
+.gc .t{height:13px;border-radius:7px;background:#C9CED5;margin-top:16px}
+.gc .l{height:10px;border-radius:5px;background:#E6E8EB;margin-top:11px}
+#introT{z-index:2}
+#vStart{display:flex;flex-direction:column;align-items:center}
+#sH{margin-top:74px}
+#sL{margin-top:18px}
+#fld{margin-top:42px;width:820px;height:200px}
+#btnGo{position:absolute;right:20px;bottom:18px}
+#hints{margin-top:22px;width:820px}
+#hp{width:844px;height:204px}
+#pop{width:350px;padding:18px 20px 16px;transform-origin:88% 0}
+</style>
+</head>
+<body>
+<div id="frame">
+  <!-- ИНТРО: бесконечный каталог → белый экран с крупной фразой -->
+  <div id="intro" class="layer"><div id="grid"></div></div>
+  <div id="introT" class="layer white"><div class="big" id="big"><div class="w"><span>Найдите</span></div><div class="w"><span>главное.</span></div></div></div>
+
+  <!-- ИНТЕРФЕЙС: полотно 1600×960, его двигает камера -->
+  <div id="stage" class="layer"><div id="app">
+    <!-- шапка: повторите структуру шапки продукта (здесь — назад + логотип · раздел · действие) -->
+    <div class="topbar">
+      <div class="tb-l"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 6l-6 6 6 6"/></svg><div class="wordmark"><img src="brand/logos/mark.svg" alt="">Demo</div></div>
+      <div class="tb-title">Умный поиск</div>
+      <div class="tb-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Новый запрос</div>
+    </div>
+
+    <!-- СТАРТ: поле с переливающейся обводкой, подсветка частей запроса, подсказки под полем -->
+    <div class="view" id="vStart">
+      <div class="h1" id="sH">Умный поиск</div>
+      <div class="lead" id="sL">Опишите, что ищете, — поиск подберёт поставщиков</div>
+      <div class="gw" id="fld"><div class="glow" id="fGlow"></div><div class="ring" id="fRing"></div>
+        <div class="face" id="fFace">
+          <div class="fld-text"><span class="ph" id="fPh">Что вы ищете?</span><span id="fTx"></span><span class="caret" id="fCaret"></span></div>
+          <div class="fld-row"><span>Показать не более</span><div class="seg"><div class="seg-th"></div><span style="color:var(--ink)">5</span><span>10</span><span>20</span></div><span>результатов</span></div>
+          <div class="btn-fx" id="btnGo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg>Найти</div>
+        </div></div>
+      <div class="hints" id="hints">
+        <div class="hint-panel" id="hp"><div class="hp-b">
+          <div class="hp-r"><b>Перечислите критерии</b>— товар, аудитория, город, объём</div>
+          <div class="hp-r"><b>Или опишите задачу</b>— что нужно и для кого</div>
+          <div class="hp-r"><b>Пишите своими словами</b>— без сокращений и артикулов</div>
+        </div></div>
+        <div class="hint" id="hHow"><div class="hb"></div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.2" stroke-linecap="round"/></svg><span>Как писать запросы</span></div>
+        <div class="hint" id="hEx"><div class="hb"></div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg><span>Примеры запросов</span></div>
+      </div>
+    </div>
+
+    <!-- РЕЗУЛЬТАТЫ: история · выдача одной колонкой · чат агента -->
+    <div class="view" id="vRes">
+      <div class="side" id="side"><div class="side-h">История запросов</div><div class="hist" id="hist"></div></div>
+      <div class="center" id="center">
+        <div class="racts" id="racts"><div class="ib-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5l4 4M4 20l1-4.5L15.8 4.7a1.8 1.8 0 0 1 2.5 0l1 1a1.8 1.8 0 0 1 0 2.5L8.5 19z"/></svg></div>
+          <div class="ob"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M7 4h10v16l-5-3.6L7 20z"/></svg>Сохранить поиск</div></div>
+        <div class="rh1" id="rh1"></div>
+        <div class="rmeta" id="rmeta"></div>
+        <div class="filters" id="filters"></div>
+        <div id="cards"></div>
+        <div class="pop" id="pop">
+          <div class="pop-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.2" stroke-linecap="round"/></svg>Почему подходит</div>
+          <div class="pop-r"><svg class="ck"></svg><div><b>Товар</b>крафт-стаканы и пакеты</div></div>
+          <div class="pop-r"><svg class="ck"></svg><div><b>Аудитория</b>кофейни и кафе</div></div>
+          <div class="pop-r"><svg class="ck"></svg><div><b>Город</b>Москва, доставка за день</div></div>
+          <div class="pop-f">На основе карточки поставщика</div>
+        </div>
+        <div class="toast" id="toast"><svg class="ck"></svg>Kraftly — в избранном</div>
+      </div>
+      <div class="chat" id="chat">
+        <div class="ch-h"><div class="ch-av"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="6.5"/><circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"/></svg></div>
+          <div><div class="ch-n">ИИ-помощник</div><div class="ch-s">Умный поиск · Demo</div></div></div>
+        <div class="msgs"><div class="msgsIn" id="msgsIn"></div></div>
+        <div class="inv" id="inv">Нашлось то, что искали? <span class="lk" id="invLink">Оценить</span><div class="x"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></div></div>
+        <div class="ch-in"><span class="ph">Уточните подборку…</span><div class="ch-send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg></div></div>
+      </div>
+    </div>
+  </div></div>
+
+  <!-- затемнение всего кадра: E.dim(x) -->
+  <div id="fdim" class="layer"></div>
+
+  <!-- ВЕРХНИЙ СЛОЙ (над затемнением): тёмный экран обработки, модалка оценки; курсор сюда добавит engine.js -->
+  <div id="stage2" class="layer"><div id="app2">
+    <div class="proc" id="proc">
+      <svg class="pviz" id="pviz"></svg>
+      <div class="pr-ph" id="prPh"><span>Анализирую запрос…</span><span>Сверяю с каталогом…</span><span>Собираю подборку…</span></div>
+      <div class="pr-crit" id="prCrit"><span>Упаковка</span><span>Кофейни</span><span>Москва</span></div>
+      <div class="pr-cnt" id="prCnt">0 с</div>
+      <div class="pr-stop">Остановить</div>
+    </div>
+    <div class="csi" id="csi"><div class="csi-box" id="csiBox">
+      <div class="csi-x"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></div>
+      <div class="csi-form" id="csiForm"><div class="csi-t">Оцените результаты поиска</div><div class="csi-st" id="csiSt"></div><div class="csi-ta">Комментарий — по желанию</div><div class="csi-btn" id="csiBtn">Отправить оценку</div></div>
+      <div class="csi-ok" id="csiOk"><div class="c" id="csiC"><svg class="ck"></svg></div><div class="t">Спасибо за вашу оценку!</div></div>
+    </div></div>
+  </div></div>
+
+  <!-- ФИНАЛ: знак продукта, название, приглашение, поле с переливом -->
+  <div id="endcard" class="layer"><div class="ec-in">
+    <img class="ec-mark" id="ecM" src="brand/logos/mark.svg" alt="">
+    <div class="ec-t" id="ecT">Умный поиск · Demo</div>
+    <div class="ec-s" id="ecS">Опишите, что ищете.</div>
+    <div class="gw ec-f" id="ecF"><div class="glow" id="ecGlow"></div><div class="ring" id="ecRing"></div>
+      <div class="face"><span class="caret" id="ecC"></span><span class="ph">Что вы ищете?</span>
+        <div class="btn-fx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg>Найти</div></div></div>
+  </div></div>
+</div>
+
+<script>
+const CK='<path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>';
+const IC={
+  bm:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M7 4h10v16l-5-3.6L7 20z"/></svg>',
+  ck:'<svg viewBox="0 0 24 24">'+CK+'</svg>',
+  info:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.2" stroke-linecap="round"/></svg>',
+  chev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10l5 5 5-5"/></svg>',
+  star:'<path d="M12 3.6l2.55 5.25 5.75.8-4.18 4.02 1 5.73L12 16.67l-5.12 2.73 1-5.73L3.7 9.65l5.75-.8z" stroke-linejoin="round"/>'
+};
+// ===== содержание (ДЕМО: «Умный поиск» в продукте Demo — замените на реальную фичу; названия вымышленные) =====
+const QUERY='Упаковка для кофеен в Москве, от 500 штук';
+const TQ=[5.0,7.05];                       // печать запроса
+// подсветка частей запроса: [фрагмент, метка, слово озвучки "id:слово", запасное время]
+const SEG_DEF=[['Упаковка','товар','p3:товар',7.95],['для кофеен','аудитория','p3:аудиторию',8.65],['в Москве','город','p3:город',9.45]];
+const ITEMS=[['Kraftly','Крафт-стаканы, крышки и пакеты для кофеен',['Эко','Опт','Москва'],'#E8EAED'],
+ ['Boxen','Коробки для выпечки и десертов с печатью логотипа',['Печать','Опт'],'#E1E4E8'],
+ ['Cuply','Бумажные стаканы от 500 штук, доставка за день',['Опт','Москва'],'#ECEEF0'],
+ ['Papero','Пакеты и салфетки из переработанной бумаги',['Эко','Москва'],'#E4E7EA'],
+ ['Wrapio','Упаковка навынос для кафе и пекарен',['Опт','Доставка'],'#DFE2E6'],
+ ['Ecopack','Компостируемая посуда и упаковка для еды',['Эко','Опт'],'#E8EAED']];
+const HIST=[[QUERY,'сейчас'],['Кофемашины в аренду для офиса','8 поставщиков · 07.10'],['Мебель для летней веранды кафе','12 поставщиков · 02.10'],['Униформа для бариста, Казань','5 поставщиков · 24.09']];
+const FILT=['Город','Категория','Минимальный заказ','Доставка','Рейтинг'];
+const MSGS=[{u:1,html:QUERY,t:18.3},{typ:1,t:18.55,t2:19.2},{html:'Запрос принят. Выявил критерии: <b>упаковка, кофейни, Москва</b>',t:19.2},
+ {typ:1,t:19.45,t2:20.05},{html:'Подобрал поставщиков под ваш запрос. Найдено — <b>6</b>',t:20.05}];
+const T={proc:13.0, res:17.6, end:32.2};   // обработка · смена экрана под затемнением · финальная карточка (на финальный удар музыки)
+const slot=i=>({x:28,y:236+i*140});        // выдача — одна колонка
+let SEG=[],SEG_OFF,CARDS=[],MEL=[],MH=[],PV,TD,TC;
+
+E.start({
+  build(E){
+    const {$,V,W,css}=E;
+    document.querySelectorAll('svg.ck').forEach(s=>{s.setAttribute('viewBox','0 0 24 24');s.innerHTML=CK;});
+    // каталог для интро
+    const g=$('grid'),cols=V?3:6,cw=V?300:290,gap=22; const gw=cols*cw+(cols-1)*gap; g.style.left=((W-gw)/2)+'px';
+    for(let r=0;r<30;r++)for(let c=0;c<cols;c++){const d=document.createElement('div');d.className='gc';
+      css(d,{left:c*(cw+gap)+'px',top:r*222+'px',width:cw+'px',height:'200px'});
+      d.innerHTML=`<div class="a"></div><div class="t" style="width:${90+(r*13+c*29)%90}px"></div><div class="l" style="width:${150+(r*17+c*11)%95}px"></div><div class="l" style="width:${100+(r*5+c*23)%120}px"></div>`;g.appendChild(d);}
+    $('big').style.fontSize=(V?104:112)+'px';
+    // метки под фрагментами запроса — встают на слово озвучки (cues.js), но не раньше, чем текст допечатан
+    SEG=SEG_DEF.map(([s,l,k,fb],i)=>{const d=document.createElement('div');d.className='mk-chip';d.textContent=l;$('fFace').appendChild(d);
+      return {a:QUERY.indexOf(s),b:QUERY.indexOf(s)+s.length,t:Math.max(TQ[1]+.2,E.sync(k,fb)),id:'mk'+i,chip:d,p:0};});
+    SEG_OFF=[E.sync('p4',10.5)-.2,E.sync('p4',10.5)+.1];        // метки гаснут к следующей фразе
+    TC=E.sync('p5:критерии',14.2); TD=E.sync('p5:каталогом',15.4)-.3;
+    // выдача
+    $('rh1').textContent=QUERY;
+    $('filters').innerHTML=FILT.map(f=>`<div class="fc"><span>${f}</span>${IC.chev}</div>`).join('')+`<div class="fc more"><span>Ещё 7</span>${IC.chev}</div>`;
+    $('hist').innerHTML=HIST.map((h,i)=>`<div class="hi${i?'':' on'}"><div class="hv"></div><div class="q">${h[0]}</div><div class="d">${h[1]}</div></div>`).join('');
+    CARDS=ITEMS.map(s=>{const d=document.createElement('div');d.className='card';
+      d.innerHTML=`<div class="ring"></div><div class="lg" style="background:${s[3]}">${s[0].slice(0,2)}</div><div class="nm">${s[0]}</div><div class="ds">${s[1]}</div><div class="tg">${s[2].map(x=>`<span class="tag">${x}</span>`).join('')}</div><div class="ac"><div class="info"><div class="ib"></div>${IC.info}</div><div class="save">${IC.bm}<span>В избранное</span></div></div>`;
+      $('cards').appendChild(d);return d;});
+    MEL=MSGS.map(m=>{const w=document.createElement('div');w.className='mw';
+      w.innerHTML=m.typ?'<div class="m a"><div class="typ"><div class="dots"><i></i><i></i><i></i></div></div></div>':`<div class="m ${m.u?'u':'a'}">${m.html}</div>`;
+      $('msgsIn').appendChild(w);return {w,m,inner:w.firstChild};});
+    $('csiSt').innerHTML=[0,1,2,3,4].map(i=>`<svg viewBox="0 0 24 24" id="st${i}">${IC.star}</svg>`).join('');
+    PV=Processing($('pviz'));
+  },
+
+  setup(E){
+    // замеры: цели камеры и курсора — из реальной вёрстки, а не на глаз
+    const {$,V,H,rect,measureAt,css}=E;
+    measureAt(9.0);
+    const f=rect('fFace'); SEG.forEach(s=>{const r=rect(s.id);s.cx=r.cx-f.x;s.cy=r.y+r.h-f.y+8;});
+    const R={fld:rect('fld'),btn:rect('btnGo'),tx:rect('fTx'),hHow:rect('hHow'),hp:rect('hp')};
+    measureAt(22);
+    MEL.forEach((o,i)=>{o.w.style.display='block';o.w.style.height='auto';o.inner.style.position='relative';MH[i]=o.inner.offsetHeight;o.inner.style.position='';});
+    const c=rect('center'),ib=rect(CARDS[0].querySelector('.info'));
+    css($('pop'),{left:(ib.cx-c.x-350*.88)+'px',top:(ib.y+ib.h-c.y+8)+'px'});   // поповер — под значком ℹ
+    measureAt(22); R.info=rect(CARDS[0].querySelector('.info')); R.pop=rect('pop'); R.save=rect(CARDS[0].querySelector('.save'));
+    measureAt(27.5); R.inv=rect('inv'); R.invLink=rect('invLink');
+    measureAt(29); R.st=[0,1,2,3,4].map(i=>rect('st'+i)); R.send=rect('csiBtn');
+
+    const F=R.fld, pan=R.hp.cy-30, A=V?[540,1000]:[960,540];
+    const yb=(y,s)=>Math.min(y,960-(H-A[1])/s);          // нижний край полотна не поднимается выше низа кадра
+    const why={x:(R.info.cx+R.pop.cx)/2-20,y:(R.info.cy+R.pop.y+R.pop.h)/2};
+    const vs=Math.min(1.75,980/R.tx.w);                    // вертикаль: текст запроса крупно, во всю ширину
+    E.camera(
+      [[0,800,480,1.0],[3.55,800,440,1.02],[4.6,800,412,1.14],[5.2,F.cx,F.cy+10,1.34],[7.3,F.cx,F.cy+20,1.32],
+       [7.75,F.cx,F.cy-6,1.5],[10.0,F.cx+6,F.cy-2,1.54],[10.6,F.cx,pan,1.22],[12.4,F.cx,pan+4,1.25],
+       [12.65,R.btn.cx-140,R.btn.cy+10,1.52],[12.95,R.btn.cx-110,R.btn.cy,1.7],[13.5,800,450,1.02],[17.6,800,440,1.18],
+       [18.15,800,480,.98],[20.4,800,482,1.0],[21.3,why.x,why.y,1.72],[24.0,why.x+6,why.y+4,1.78],
+       [24.75,R.save.cx-90,R.save.cy-50,1.7],[26.2,R.save.cx-80,R.save.cy-50,1.72],
+       [26.85,1390,yb(R.inv.cy-90,1.62),1.62],[27.95,1390,yb(R.inv.cy-80,1.64),1.64],
+       [28.55,800,480,1.7],[31.2,800,482,1.74],[32.0,800,480,.9],[34,800,480,.8],[60,800,480,.8]],
+      [[0,800,480,.66],[3.55,800,420,1.1],[4.6,800,400,1.18],[5.2,F.cx,F.cy,1.28],[7.3,F.cx,F.cy+20,1.28],
+       [7.75,R.tx.cx,R.tx.cy+28,vs],[10.0,R.tx.cx+4,R.tx.cy+30,vs*1.02],[10.6,R.hp.x+372,pan+10,1.42],[12.4,R.hp.x+376,pan+12,1.44],
+       [12.65,R.btn.cx-40,R.btn.cy,1.9],[12.95,R.btn.cx-30,R.btn.cy,2.1],[13.5,800,470,1.45],[17.6,800,465,1.56],
+       [18.15,732,520,1.15],[20.4,732,520,1.15],[21.3,why.x,why.y,2.35],[24.0,why.x,why.y+4,2.4],
+       [24.75,R.save.cx-60,R.save.cy-60,2.1],[26.2,R.save.cx-56,R.save.cy-60,2.12],
+       [26.85,1396,yb(R.inv.cy-60,2.3),2.3],[27.95,1396,yb(R.inv.cy-56,2.32),2.32],
+       [28.55,800,480,2.0],[31.2,800,482,2.04],[32.0,800,480,.66],[34,800,480,.6],[60,800,480,.6]]);
+    const P=(r,dx=0,dy=0)=>[r.cx+dx,r.cy+dy];
+    E.cursor([
+      [10.1,...P(R.hHow,90,90),0],[10.3,...P(R.hHow,60,60),1],[10.55,...P(R.hHow,-30,2),1],[12.3,...P(R.hHow,-26,4),1],
+      [12.7,...P(R.btn,-10,4),1],[13.1,...P(R.btn,-10,4),1],[13.35,...P(R.btn,20,40),0],
+      [20.75,...P(R.info,90,90),0],[20.95,...P(R.info,60,60),1],[21.4,...P(R.info,1,2),1],[21.95,...P(R.info,4,6),1],[22.3,...P(R.info,40,40),0],
+      [24.85,...P(R.save,60,100),0],[25.05,...P(R.save,50,70),1],[25.42,...P(R.save,-4,2),1],[26.2,...P(R.save,-2,4),1],[26.5,...P(R.save,30,50),0],
+      [27.2,...P(R.invLink,80,90),0],[27.4,...P(R.invLink,50,60),1],[27.82,...P(R.invLink,-2,2),1],[28.1,...P(R.invLink,0,4),1],
+      [28.6,...P(R.st[0],0,4),1],[29.2,...P(R.st[4],0,4),1],[29.4,...P(R.st[4],2,6),1],
+      [29.7,...P(R.send,-10,2),1],[30.05,...P(R.send,-8,4),1],[30.35,...P(R.send,30,50),0],[99,0,0,0]]);
+    E.clicks([12.85,21.5,25.5,27.9,29.3,29.85]);
+  },
+
+  scene(t,E){
+    const {$,lin,eio,eout,css,show,MEAS:M}=E;
+    // --- интро: скролл каталога → белый экран с фразой ---
+    if(show($('intro'),!M&&t<2.2)){
+      const y=80*t+300*t*t; $('grid').style.transform=`translateY(${-y}px)`;
+      $('grid').style.filter=`blur(${Math.min(3,Math.max(0,(80+600*t-400)/900)).toFixed(2)}px)`;
+    }
+    if(show($('introT'),!M&&t>=2.0&&t<3.85,'flex')){
+      $('introT').style.opacity=Math.min(eout(lin(t,2.0,2.12)),1-eio(lin(t,3.55,3.8)));
+      $('big').querySelectorAll('.w span').forEach((s,i)=>{const p=eout(lin(t,2.15+i*.12,2.55+i*.12));s.style.transform=`translateY(${(1-p)*105}%)`;});
+    }
+    // --- интерфейс ---
+    const on=M||(t>=3.55&&t<T.end+.6);
+    show($('stage'),on); show($('stage2'),on);
+    if(on){
+      $('app').style.opacity=M?1:eout(lin(t,3.55,3.8))*(1-eio(lin(t,T.end,T.end+.55)));
+      startScreen(t,E); processing(t,E); results(t,E); rating(t,E);
+    }
+    endcard(t,E);
+  }
+});
+
+function startScreen(t,E){
+  const {$,lin,eio,eout,env,bump,css,show,blink,markup,grad,MEAS:M}=E;
+  if(!show($('vStart'),M?t<17:t<T.res,'flex'))return;          // остаётся под тёмным экраном до смены
+  [['sH',3.7],['sL',3.8],['fld',3.9],['hints',4.05]].forEach(([id,a])=>{const p=M?1:eout(lin(t,a,a+.45));css($(id),{opacity:p,transform:`translateY(${(1-p)*16}px)`});});
+  $('fRing').style.background=$('fGlow').style.background=grad(t*55);   // перелив обводки
+  const n=M?QUERY.length:Math.floor(lin(t,TQ[0],TQ[1])*QUERY.length);
+  SEG.forEach(s=>s.p=M?0:eout(lin(t,s.t,s.t+.3))*(1-eio(lin(t,SEG_OFF[0],SEG_OFF[1]))));
+  const h=markup(QUERY,n,SEG),tx=$('fTx'); if(tx._h!==h){tx.innerHTML=h;tx._h=h;}
+  show($('fPh'),!M&&t<TQ[0],'inline');
+  $('fCaret').style.opacity=(t>=TQ[0]&&t<TQ[1]+.05)||blink(t)?1:0;
+  SEG.forEach(s=>{const p=(M||s.cx==null)?0:s.p;
+    if(show(s.chip,p>.001,'flex'))css(s.chip,{opacity:p,left:s.cx+'px',top:s.cy+'px',transform:`translateX(-50%) translateY(${(1-p)*-6}px) scale(${.9+.1*p})`});});
+  // подсказка «Как писать запросы»: наведение → панель
+  const hv=M?0:env(t,10.55,12.45,.15,.12),hh=$('hHow');
+  hh.querySelector('.hb').style.opacity=hv; hh.style.color=hv>.5?'var(--ink)':''; hh.style.borderColor=hv>.5?'transparent':'';
+  const pe=M?1:env(t,10.65,12.55,.25,.2),hp=$('hp');
+  if(show(hp,pe>.001)){css(hp,{opacity:pe,transform:`translateY(${(1-pe)*-6}px) scale(${.985+.015*pe})`});
+    hp.querySelectorAll('.hp-r').forEach((r,i)=>{const p=M?1:eout(lin(t,10.75+i*.08,11.05+i*.08));css(r,{opacity:p,transform:`translateY(${(1-p)*6}px)`});});}
+  $('btnGo').style.transform=`scale(${1-.05*bump(t,12.82,13.04)})`;
+}
+
+function processing(t,E){
+  // тёмный экран: затемнение всего кадра + содержимое в #app2 (не внутри #app — иначе мерцает край окна); анимация — processing.js
+  const {$,lin,eio,eout,env,show,MEAS:M}=E;
+  const k=M?0:eout(lin(t,T.proc,T.proc+.35))*(1-eio(lin(t,T.res+.15,T.res+.5)));
+  E.dim(.86*k);
+  if(!show($('proc'),k>.001,'flex'))return;
+  $('proc').style.opacity=k;
+  const T0=T.proc+.45; PV.render(t,T0,TD);
+  const PH=[[T0,T0+1.6],[T0+1.6,T0+3.0],[T0+3.0,T.res+.4]];
+  $('prPh').querySelectorAll('span').forEach((s,i)=>{const e=env(t,PH[i][0],PH[i][1],.28,.22);s.style.opacity=e;
+    s.style.transform=`translateY(${(1-eout(lin(t,PH[i][0],PH[i][0]+.3)))*14-eio(lin(t,PH[i][1]-.22,PH[i][1]))*10}px)`;});
+  $('prCrit').querySelectorAll('span').forEach((c,i)=>{const p=eout(lin(t,TC+i*.18,TC+.35+i*.18));c.style.opacity=p;c.style.transform=`translateY(${(1-p)*8}px)`;});
+  $('prCnt').textContent=Math.max(0,Math.floor(t-T.proc-.1))+' с';
+}
+
+function results(t,E){
+  const {$,lin,eio,eout,env,css,show,stagger,plural,MEAS:M}=E;
+  if(!show($('vRes'),M||t>=T.res))return;
+  const r0=T.res+.3, sp=M?1:eout(lin(t,r0,r0+.5)), cp=M?1:eout(lin(t,r0+.05,r0+.55));
+  css($('side'),{transform:`translateX(${(1-sp)*-40}px)`,opacity:sp});
+  css($('chat'),{transform:`translateX(${(1-cp)*40}px)`,opacity:cp});
+  [['racts',.05],['rh1',.07],['rmeta',.17],['filters',.25]].forEach(([id,d])=>{const p=M?1:eout(lin(t,r0+d,r0+d+.4));css($(id),{opacity:p,transform:`translateY(${(1-p)*10}px)`});});
+  const n=M?ITEMS.length:Math.round(ITEMS.length*eout(lin(t,r0+.6,r0+2.1)));
+  $('rmeta').textContent=`${n} ${plural(n,['поставщик','поставщика','поставщиков'])} ${n===1?'найден':'найдено'} • сегодня, 11:34`;
+  CARDS.forEach((c,i)=>{const p=M?1:stagger(t,r0+.55,i,.1,.45),s=slot(i);css(c,{opacity:p,transform:`translate(${s.x}px,${s.y-(1-p)*28}px) scale(${.985+.015*p})`});});
+  // «Почему подходит» — поповер у первой карточки
+  CARDS[0].querySelector('.ib').style.opacity=M?0:env(t,21.45,24.65,.15,.25);
+  const pe=M?1:env(t,21.6,24.65,.3,.25);
+  if(show($('pop'),pe>0)){$('pop').style.opacity=pe;$('pop').style.transform=`translateY(${(1-pe)*-8}px) scale(${.97+.03*pe})`;
+    $('pop').querySelectorAll('.pop-r').forEach((r,i)=>{const p=M?1:eout(lin(t,21.8+i*.13,22.1+i*.13));r.style.opacity=p;r.style.transform=`translateX(${(1-p)*-8}px)`;});}
+  // «В избранное» → тост
+  const sv=CARDS[0].querySelector('.save'),on=t>=25.5;
+  if(sv._on!==on){sv._on=on;sv.className='save'+(on?' on':'');sv.innerHTML=(on?IC.ck:IC.bm)+`<span>${on?'В избранном':'В избранное'}</span>`;}
+  const te=M?0:env(t,25.6,26.95,.25,.2);
+  if(show($('toast'),te>0,'flex')){$('toast').style.opacity=te;$('toast').style.transform=`translateX(-50%) translateY(${(1-te)*-14}px)`;}
+  // чат: сообщения выезжают, высота растёт плавно (MH — замер в setup)
+  let y=0;
+  MEL.forEach((o,i)=>{const m=o.m; if(MH[i]==null)return;
+    let p=M?(m.typ?0:1):eout(lin(t,m.t,m.t+.35));
+    if(m.typ&&!M)p=Math.min(p,1-eio(lin(t,m.t2-.12,m.t2)));
+    const h=MH[i]*p; o.w.style.height=h+'px'; o.w.style.marginBottom=(10*p)+'px'; o.w.style.display=p<=0?'none':'block';
+    o.inner.style.opacity=p; o.inner.style.transform=`translateY(${(1-p)*10}px) scale(${.97+.03*p})`;
+    if(m.typ)o.inner.querySelectorAll('.dots i').forEach((d,k)=>d.style.opacity=.3+.7*Math.max(0,Math.sin(t*9-k*.9)));
+    y+=h+10*p;});
+  const AREA=752-16-6-62*(M?0:eout(lin(t,26.95,27.3))*(1-eio(lin(t,27.95,28.2))));
+  $('msgsIn').style.transform=`translateY(${-Math.max(0,y-AREA)}px)`;
+  // приглашение оценить — в чате, над полем ввода
+  const iv=M?1:env(t,26.95,28.2,.35,.2);
+  if(show($('inv'),iv>.001,'flex'))css($('inv'),{opacity:iv,transform:`translateY(${(1-eout(lin(t,26.95,27.3)))*12}px)`});
+}
+
+function rating(t,E){
+  // модалка оценки в #app2 + лёгкое затемнение кадра → звёзды → «Спасибо»
+  const {$,lin,eio,eout,env,bump,css,show,MEAS:M}=E;
+  const mo=M?1:env(t,28.2,31.5,.3,.3);
+  if(!M)E.dim(.45*mo);
+  if(!show($('csi'),mo>.001))return;
+  css($('csiBox'),{opacity:mo,transform:`translateY(${(1-mo)*14}px) scale(${.96+.04*mo})`});
+  for(let k=0;k<5;k++){const ts=28.6+k*.15,s=$('st'+k);s.classList.toggle('on',M||t>=ts);s.style.transform=`scale(${1+.16*bump(t,ts,ts+.2)+.1*bump(t,29.25,29.5)})`;}
+  $('csiBtn').style.transform=`scale(${1-.04*bump(t,29.82,30.02)})`;
+  $('csiForm').style.opacity=M?1:1-eio(lin(t,29.95,30.15));
+  $('csiOk').style.opacity=M?0:eout(lin(t,30.05,30.35));
+  $('csiC').style.transform=`scale(${.6+.4*eout(lin(t,30.05,30.45))+.06*bump(t,30.3,30.6)})`;
+}
+
+function endcard(t,E){
+  const {$,lin,eout,css,show,blink,grad,MEAS:M}=E;
+  if(!show($('endcard'),!M&&t>=T.end,'flex'))return;
+  $('endcard').style.opacity=eout(lin(t,T.end,T.end+.55));
+  [['ecM',.15],['ecT',.3],['ecS',.55],['ecF',.8]].forEach(([id,d])=>{const p=eout(lin(t,T.end+d,T.end+d+.5));css($(id),{opacity:p,transform:`translateY(${(1-p)*18}px)`});});
+  $('ecC').style.opacity=blink(t-T.end)?1:0;
+  $('ecRing').style.background=$('ecGlow').style.background=grad(t*55);
+}
+</script>
+</body>
+</html>

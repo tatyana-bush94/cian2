@@ -1,0 +1,71 @@
+window.SCREENS = {
+  "source": "http://127.0.0.1:5183/motion/auction-buyer-promo/prototype.html",
+  "component": "src/pages/auction/AuctionPage.tsx",
+  "viewport": [
+    390,
+    820
+  ],
+  "deviceScaleFactor": 2,
+  "screens": {
+    "conditions": {
+      "height": 2724,
+      "scrollY": 0,
+      "controls": {
+        "plus": {
+          "x": 308,
+          "y": 1066.828,
+          "width": 33,
+          "height": 33
+        },
+        "bid": {
+          "x": 44,
+          "y": 1152.422,
+          "width": 302,
+          "height": 56
+        }
+      }
+    },
+    "conditions-focused": {
+      "height": 2724,
+      "scrollY": 0,
+      "controls": {
+        "plus": {
+          "x": 308,
+          "y": 1066.828,
+          "width": 33,
+          "height": 33
+        },
+        "bid": {
+          "x": 44,
+          "y": 1152.422,
+          "width": 302,
+          "height": 56
+        }
+      }
+    },
+    "review": {
+      "height": 820,
+      "scrollY": 679,
+      "controls": {
+        "confirm": {
+          "x": 43,
+          "y": 589.766,
+          "width": 304,
+          "height": 56
+        }
+      }
+    },
+    "pending": {
+      "height": 2825,
+      "scrollY": 0,
+      "controls": {}
+    },
+    "published": {
+      "height": 2825,
+      "scrollY": 0,
+      "controls": {}
+    }
+  },
+  "cardTop": 696.9375,
+  "modalBackgroundScroll": 679
+};
