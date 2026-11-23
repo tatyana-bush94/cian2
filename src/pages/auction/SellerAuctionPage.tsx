@@ -1,5 +1,7 @@
 import { useEffect, useReducer, useRef, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
+import { newEventId, restartFlow, trackGoal, useScreenGoal } from '@/analytics/auction';
+import { PREVIEW_NOW, sellerPreview } from './map/preview';
 import { Badge, Button, Checkbox, Input, Modal, Select } from '@/ui';
 import { AuctionIcon as I } from './AuctionIcon';
 import {
@@ -13,23 +15,29 @@ import {
   parsePrice,
   SELLER_STORAGE_KEY,
   sellerReducer,
+  validatePrice,
   type SellerDraft,
 } from './sellerModel';
 import s from './SellerAuctionPage.module.css';
 
 const steps = ['Условия', 'Проверка', 'Публикация'];
 
-export function SellerAuctionPage() {
-  const [state, dispatch] = useReducer(sellerReducer, undefined, () => initialSellerState());
+export function SellerAuctionPage({ previewScreen }: { previewScreen?: string }) {
+  const preview = !!previewScreen;
+  const [state, dispatch] = useReducer(sellerReducer, undefined, () =>
+    previewScreen ? sellerPreview(previewScreen) : initialSellerState(),
+  );
   const { session, request, agreed, priceError } = state;
   const { draft, publication, stage } = session;
   const pending = request === 'pending';
-  const [help, setHelp] = useState(false);
-  const [showListing, setShowListing] = useState(false);
+  const [help, setHelp] = useState(previewScreen === 'help');
+  const [showListing, setShowListing] = useState(
+    previewScreen === 'listing' || previewScreen === 'listing_ended',
+  );
   const [failNext, setFailNext] = useState(false);
-  const [resetOpen, setResetOpen] = useState(false);
+  const [resetOpen, setResetOpen] = useState(previewScreen === 'reset');
   const [storageError, setStorageError] = useState(false);
-  const [now, setNow] = useState(Date.now);
+  const [now, setNow] = useState(() => (preview ? PREVIEW_NOW : Date.now()));
   const heading = useRef<HTMLHeadingElement>(null);
   const priceInput = useRef<HTMLDivElement>(null);
   const stepIndex = stage === 'conditions' ? 0 : stage === 'review' ? 1 : 2;
@@ -37,39 +45,93 @@ export function SellerAuctionPage() {
   const price = parsePrice(draft.priceInput);
 
   useEffect(() => {
+    if (preview) return;
     document.title = 'Продажа на аукционе · Циан';
-  }, []);
+  }, [preview]);
 
   useEffect(() => {
+    if (preview) return;
     try {
       localStorage.setItem(SELLER_STORAGE_KEY, JSON.stringify(session));
       setStorageError(false);
     } catch {
       setStorageError(true);
     }
-  }, [session]);
+  }, [session, preview]);
 
   useEffect(() => {
-    if (!pending) return;
+    if (!pending || preview) return;
     const timer = window.setTimeout(() => dispatch({ type: 'resolve', now: Date.now() }), 1200);
     return () => window.clearTimeout(timer);
-  }, [pending]);
+  }, [pending, preview]);
 
   useEffect(() => {
+    if (preview) return;
     heading.current?.focus({ preventScroll: true });
     window.scrollTo({ top: 0, behavior: 'instant' });
-  }, [stage, showListing]);
+  }, [stage, showListing, preview]);
 
   useEffect(() => {
-    if (priceError) priceInput.current?.querySelector('input')?.focus();
-  }, [priceError]);
+    if (!preview && priceError) priceInput.current?.querySelector('input')?.focus();
+  }, [priceError, preview]);
 
   useEffect(() => {
-    if (!publication) return;
+    if (!publication || preview) return;
     setNow(Date.now());
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(timer);
-  }, [publication]);
+  }, [publication, preview]);
+
+  const screen = `seller_${help ? 'help' : resetOpen ? 'reset' : pending ? 'pending' : request === 'error' ? 'error' : priceError ? 'invalid' : showListing ? (ended ? 'listing_ended' : 'listing') : stage === 'published' && ended ? 'ended' : stage}`;
+  const analyticsStep =
+    stage === 'conditions'
+      ? 1
+      : stage === 'review' && !pending && request !== 'error'
+        ? 2
+        : showListing
+          ? 4
+          : 3;
+  useScreenGoal('seller', screen, analyticsStep, preview, publication?.id);
+  const attemptId = useRef('');
+  const previousRequest = useRef(request);
+  const wasEnded = useRef(ended);
+  useEffect(() => {
+    if (!preview && previousRequest.current === 'pending' && request !== 'pending') {
+      trackGoal(request === 'error' ? 'auction_publish_error' : 'auction_publish_success', {
+        role: 'seller',
+        step: 3,
+        screen,
+        attempt_id: attemptId.current,
+        auction_id: publication?.id,
+        result: request === 'error' ? 'network' : 'success',
+      });
+    }
+    previousRequest.current = request;
+    if (!preview && !wasEnded.current && ended) {
+      trackGoal('auction_expired', {
+        role: 'seller',
+        step: analyticsStep,
+        screen,
+        auction_id: publication?.id,
+      });
+    }
+    wasEnded.current = ended;
+  }, [request, screen, publication, ended, analyticsStep, preview]);
+
+  function goal(
+    name: string,
+    extra: { source?: string; result?: string; target_role?: 'buyer' | 'seller' } = {},
+  ) {
+    if (!preview) trackGoal(name, { role: 'seller', step: analyticsStep, screen, ...extra });
+  }
+  function closeHelp() {
+    goal('auction_help_close');
+    setHelp(false);
+  }
+  function closeReset() {
+    goal('auction_reset_cancel');
+    setResetOpen(false);
+  }
 
   function updateDraft(update: Partial<SellerDraft>) {
     dispatch({ type: 'edit', draft: { ...draft, ...update } });
@@ -77,15 +139,30 @@ export function SellerAuctionPage() {
 
   function review(event: FormEvent) {
     event.preventDefault();
+    goal(validatePrice(draft.priceInput) ? 'auction_validation_error' : 'auction_review', {
+      result: validatePrice(draft.priceInput) ? 'price' : 'valid',
+    });
     dispatch({ type: 'review' });
   }
 
   function publish() {
+    if (!agreed || pending) return;
+    attemptId.current = newEventId();
+    if (!preview)
+      trackGoal('auction_publish_submit', {
+        role: 'seller',
+        step: 3,
+        screen,
+        attempt_id: attemptId.current,
+        source: request === 'error' ? 'retry' : 'review',
+      });
     dispatch({ type: 'publish', fail: failNext });
     setFailNext(false);
   }
 
   function reset() {
+    goal('auction_reset');
+    if (!preview) restartFlow('seller');
     dispatch({ type: 'reset' });
     setShowListing(false);
     setFailNext(false);
@@ -113,7 +190,7 @@ export function SellerAuctionPage() {
           : 'Аукцион запущен — теперь покупатели могут делать ставки.';
 
   return (
-    <div className={s.app}>
+    <div className={`${s.app} ${preview ? s.mapPreview : ''}`}>
       <a href="#seller-main" className="skip-link">
         К содержимому
       </a>
@@ -123,7 +200,13 @@ export function SellerAuctionPage() {
           <span className={s.headerSection}>
             Моё объявление <span>/</span> Аукцион
           </span>
-          <button className={s.helpButton} onClick={() => setHelp(true)}>
+          <button
+            className={s.helpButton}
+            onClick={() => {
+              goal('auction_help_open');
+              setHelp(true);
+            }}
+          >
             <I name="info" size={17} />
             <span>Как это работает</span>
           </button>
@@ -148,6 +231,12 @@ export function SellerAuctionPage() {
           <span className={s.sellerLabel}>
             <I name="home" size={16} />
             Вы — продавец
+            <Link
+              to="/auction/buyer"
+              onClick={() => goal('auction_role_switch', { target_role: 'buyer' })}
+            >
+              Я покупатель ↗
+            </Link>
           </span>
         </div>
 
@@ -323,7 +412,12 @@ export function SellerAuctionPage() {
                   <Checkbox
                     checked={agreed}
                     disabled={pending}
-                    onChange={(event) => dispatch({ type: 'agree', value: event.target.checked })}
+                    onChange={(event) => {
+                      goal('auction_agree', {
+                        result: event.target.checked ? 'accepted' : 'revoked',
+                      });
+                      dispatch({ type: 'agree', value: event.target.checked });
+                    }}
                     label="Подтверждаю условия аукциона"
                   />
                 </div>
@@ -367,7 +461,10 @@ export function SellerAuctionPage() {
                   size="L"
                   className={s.secondary}
                   disabled={pending}
-                  onClick={() => dispatch({ type: 'back' })}
+                  onClick={() => {
+                    goal('auction_edit');
+                    dispatch({ type: 'back' });
+                  }}
                 >
                   <I name="back" size={17} />
                   Изменить условия
@@ -420,7 +517,10 @@ export function SellerAuctionPage() {
                   fullWidth
                   size="L"
                   className={s.primary}
-                  onClick={() => setShowListing(true)}
+                  onClick={() => {
+                    goal('auction_listing_open');
+                    setShowListing(true);
+                  }}
                 >
                   Посмотреть объявление <I name="arrow" size={18} />
                 </Button>
@@ -457,8 +557,8 @@ export function SellerAuctionPage() {
                 <div className={s.neutralNote}>
                   <I name="info" size={18} />
                   <p>
-                    Это просмотр объявления продавцом. Участие покупателей и приём реальных ставок в
-                    этом прототипе не предусмотрены.
+                    Это просмотр объявления продавцом. Переключитесь в роль покупателя, чтобы пройти
+                    учебный сценарий ставки.
                   </p>
                 </div>
                 <Button
@@ -466,7 +566,10 @@ export function SellerAuctionPage() {
                   fullWidth
                   size="L"
                   className={s.secondary}
-                  onClick={() => setShowListing(false)}
+                  onClick={() => {
+                    goal('auction_listing_close');
+                    setShowListing(false);
+                  }}
                 >
                   <I name="back" size={17} />К результату публикации
                 </Button>
@@ -513,7 +616,10 @@ export function SellerAuctionPage() {
               size="XS"
               theme="stroke_secondary"
               disabled={pending}
-              onClick={() => setResetOpen(true)}
+              onClick={() => {
+                goal('auction_reset_open');
+                setResetOpen(true);
+              }}
             >
               Начать заново
             </Button>
@@ -531,13 +637,20 @@ export function SellerAuctionPage() {
             Учебный прототип
           </span>
           <p>Реальной публикации на Циане нет. Оплата и оформление сделки не предусмотрены.</p>
+          <Link to="/map">Карта экранов</Link>
+          <Link
+            to="/auction/buyer"
+            onClick={() => goal('auction_role_switch', { target_role: 'buyer' })}
+          >
+            Я покупатель
+          </Link>
           <Link to="/ui-kit">
             UI-kit <I name="arrow" size={14} />
           </Link>
         </footer>
       </main>
 
-      <Modal open={help} title="Как продать на аукционе" onClose={() => setHelp(false)}>
+      <Modal preview={preview} open={help} title="Как продать на аукционе" onClose={closeHelp}>
         <div className={s.modalContent}>
           <ol>
             <li>
@@ -557,18 +670,18 @@ export function SellerAuctionPage() {
             Побеждает самая высокая принятая ставка к моменту окончания. Это учебный сценарий
             продавца: реальные покупатели, платежи и оформление не подключены.
           </p>
-          <Button fullWidth onClick={() => setHelp(false)}>
+          <Button fullWidth onClick={closeHelp}>
             Понятно
           </Button>
         </div>
       </Modal>
-      <Modal open={resetOpen} title="Начать заново?" onClose={() => setResetOpen(false)}>
+      <Modal preview={preview} open={resetOpen} title="Начать заново?" onClose={closeReset}>
         <div className={s.modalContent}>
           <p>Текущий учебный аукцион будет заменён новым черновиком с начальными условиями.</p>
           <Button fullWidth onClick={reset}>
             Создать новый черновик
           </Button>
-          <Button fullWidth theme="stroke_secondary" onClick={() => setResetOpen(false)}>
+          <Button fullWidth theme="stroke_secondary" onClick={closeReset}>
             Оставить текущий аукцион
           </Button>
         </div>

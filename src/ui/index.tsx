@@ -320,15 +320,19 @@ export function Modal({
   title,
   onClose,
   children,
+  preview = false,
 }: {
   open: boolean;
   title: string;
   onClose: () => void;
   children: ReactNode;
+  /** Static, non-focusing rendering for isolated scenario-map thumbnails. */
+  preview?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   useEffect(() => {
+    if (preview) return;
     const dialog = ref.current;
     if (!dialog) return;
     if (!open) {
@@ -342,7 +346,26 @@ export function Modal({
       if (dialog.open) dialog.close();
       active?.focus();
     };
-  }, [open]);
+  }, [open, preview]);
+  if (preview)
+    return open ? (
+      <div className={s.modalPreview}>
+        <div className={s.modal} role="dialog" aria-labelledby={titleId}>
+          <div className={s.modalHeader}>
+            <h2 id={titleId}>{title}</h2>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Закрыть окно"
+              className={s.iconButton}
+            >
+              ×
+            </button>
+          </div>
+          {children}
+        </div>
+      </div>
+    ) : null;
   return (
     <dialog
       ref={ref}
@@ -352,7 +375,6 @@ export function Modal({
         event.preventDefault();
         onClose();
       }}
-      onClose={onClose}
     >
       <div className={s.modalHeader}>
         <h2 id={titleId}>{title}</h2>

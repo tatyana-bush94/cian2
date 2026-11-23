@@ -29,6 +29,12 @@ export function IPhonePreview() {
             <span>Мобильный прототип</span>
           </div>
         </div>
+        <Link to="/map" className={s.fullscreen}>
+          Карта экранов ↗
+        </Link>
+        <Link to="/auction/buyer" className={s.fullscreen}>
+          Я покупатель ↗
+        </Link>
         <Link to="/auction/app" className={s.fullscreen}>
           Открыть без рамки <AuctionIcon name="arrow" size={16} />
         </Link>

@@ -1056,3 +1056,77 @@
     font-size: 9px;
   }
 }
+
+/* Real workflow components in isolated, read-only map thumbnails. */
+.mapPreview .headerInner {
+  height: 55px;
+}
+.mapPreview .intro,
+.mapPreview .property,
+.mapPreview .trustLine,
+.mapPreview .practice,
+.mapPreview .footer,
+.mapPreview .storageWarning {
+  display: none;
+}
+.mapPreview .main {
+  padding: 12px 16px;
+}
+.mapPreview .progress {
+  margin-bottom: 15px;
+}
+.mapPreview .workflow {
+  padding: 20px;
+}
+.mapPreview .columns {
+  display: block;
+}
+.mapPreview .description {
+  font-size: 11px;
+  margin-bottom: 16px;
+}
+.mapPreview .howItWorks,
+.mapPreview .actionHint {
+  display: none;
+}
+.mapPreview .form {
+  gap: 16px;
+}
+.mapPreview .workflowTop {
+  margin-bottom: 15px;
+}
+.mapPreview .neutralNote {
+  padding: 10px;
+  font-size: 10px;
+}
+.mapPreview .terms {
+  gap: 10px;
+}
+.mapPreview .neutralNote {
+  display: none;
+}
+.mapPreview .workflowTop {
+  display: none;
+}
+.mapPreview .summaryPrice,
+.mapPreview .publishedPrice {
+  padding-block: 12px;
+  margin-bottom: 12px;
+}
+.mapPreview .agreement {
+  margin-block: 13px;
+}
+.mapPreview .errorNotice {
+  padding: 10px;
+  margin-bottom: 10px;
+}
+.mapPreview .errorNotice p {
+  font-size: 10px;
+}
+.sellerLabel > a {
+  margin-left: 10px;
+  padding-left: 10px;
+  border-left: 1px solid #dce5f4;
+  font-size: 10px;
+  white-space: nowrap;
+}
