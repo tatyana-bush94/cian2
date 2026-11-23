@@ -1,10 +1,18 @@
 import { useEffect, useReducer, useRef, useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
 import { newEventId, restartFlow, trackGoal, useScreenGoal } from '@/analytics/auction';
 import { buyerPreview, PREVIEW_NOW, readBuyerState } from './map/preview';
 import { getScreen } from './map/scenario';
-import { Button, Checkbox, Input, Modal, Select, Spinner } from '@/ui';
+import { Checkbox, Input, Modal, Select, Spinner } from '@/ui';
+import {
+  AuctionButton as Button,
+  AuctionHeader,
+  AuctionFooter,
+  AuctionHelp,
+} from './AuctionChrome';
+import c from './AuctionChrome.module.css';
 import { AuctionIcon as I } from './AuctionIcon';
+import { RoleSwitcher } from './RoleSwitcher';
+import { useAuctionRoleNavigation } from './roleNavigation';
 import {
   auctionReducer,
   canBid,
@@ -85,18 +93,6 @@ function Terms({ auction }: { auction: Auction }) {
   );
 }
 
-function Logo() {
-  return (
-    <span className={s.logo} aria-label="Циан">
-      <svg width="35" height="35" viewBox="0 0 36 36" fill="none" aria-hidden="true">
-        <path d="M7 8v20h22v-7h-6V8h-6v14h-4V8H7Z" fill="currentColor" />
-        <path d="M25 4h5v5h-5z" fill="currentColor" />
-      </svg>
-      <span>циан</span>
-    </span>
-  );
-}
-
 export function AuctionPage({
   initialRole = 'seller',
   previewScreen,
@@ -105,7 +101,7 @@ export function AuctionPage({
   previewScreen?: string;
 }) {
   const preview = !!previewScreen;
-  const navigate = useNavigate();
+  const navigateRole = useAuctionRoleNavigation();
   const [state, dispatch] = useReducer(auctionReducer, undefined, () =>
     previewScreen
       ? buyerPreview(previewScreen)
@@ -151,10 +147,13 @@ export function AuctionPage({
   const detailsRef = useRef<HTMLElement>(null);
   const cardRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const listingHeading = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
     if (preview) return;
     document.title = 'Аукцион квартиры · Циан';
+    listingHeading.current?.focus({ preventScroll: true });
+    window.scrollTo({ top: 0, behavior: 'instant' });
     const interval = window.setInterval(() => {
       const tick = Date.now();
       setNow(tick);
@@ -285,7 +284,7 @@ export function AuctionPage({
     if (pending || nextRole === role) return;
     goal('auction_role_switch', { target_role: nextRole });
     if (initialRole === 'buyer' && nextRole === 'seller') {
-      navigate('/auction/app');
+      navigateRole('seller');
       return;
     }
     setRole(nextRole);
@@ -374,60 +373,32 @@ export function AuctionPage({
   }
 
   return (
-    <div className={`${s.app} ${preview ? s.mapPreview : ''}`} data-preview={previewScreen}>
+    <div
+      className={`${c.app} ${s.app} ${preview ? s.mapPreview : ''}`}
+      data-preview={previewScreen}
+    >
       <a href="#auction-main" className="skip-link">
         К содержимому
       </a>
-      <header className={s.header}>
-        <div className={s.headerInner}>
-          <Logo />
-          <nav className={s.topNav} aria-label="Разделы аукциона">
-            <button
-              className={s.navActive}
-              onClick={() => {
-                showTab('about');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-            >
-              Аукцион квартиры
-            </button>
-            <button onClick={() => showTab('history')}>
-              Ставки <span className={s.navCount}>{auction.bids.length}</span>
-            </button>
-            <button onClick={openHelp}>Как это работает</button>
-          </nav>
-          <div className={s.profile}>
-            <span className={s.profileAvatar}>Т</span>
-            <span>Татьяна</span>
-          </div>
-        </div>
-      </header>
+      <AuctionHeader preview={preview} onHelp={openHelp} />
+
+      <RoleSwitcher
+        preview={preview}
+        role={role}
+        onChange={changeRole}
+        disabled={pending || publishing}
+      />
 
       <main id="auction-main" className={s.main}>
-        <div className={s.contextBar}>
-          <div className={s.breadcrumb}>
-            <I name="back" size={17} />
-            <span>{role === 'seller' ? 'Моё объявление' : 'Продажа квартир'}</span>
-            <span className={s.breadcrumbSlash}>/</span>
-            <span>Аукцион</span>
-          </div>
-          <div className={s.roleControl} role="group" aria-label="Переключить роль">
-            <button aria-pressed={role === 'buyer'} onClick={() => changeRole('buyer')}>
-              <I name="search" size={16} />Я покупатель
-            </button>
-            <button aria-pressed={role === 'seller'} onClick={() => changeRole('seller')}>
-              <I name="home" size={16} />Я продавец
-            </button>
-          </div>
-        </div>
-
         <div className={s.heading}>
           <div>
             <div className={s.eyebrow}>
               <I name="gavel" size={15} />
               НОВЫЙ ФОРМАТ ПРОДАЖИ
             </div>
-            <h1>2-комн. квартира, 64 м²</h1>
+            <h1 ref={listingHeading} tabIndex={-1}>
+              2-комн. квартира, 64 м²
+            </h1>
             <div className={s.address}>
               <span>Москва, Ходынский бульвар, 2</span>
               <span className={s.metroDot} />
@@ -678,7 +649,7 @@ export function AuctionPage({
             className={s.auctionColumn}
             aria-label={role === 'seller' ? 'Управление аукционом' : 'Участие в аукционе'}
           >
-            <section ref={cardRef} className={s.auctionCard}>
+            <section ref={cardRef} className={`${c.card} ${s.auctionCard}`}>
               <div className={s.cardTop}>
                 <span className={s.auctionBadge}>
                   <I name="gavel" size={14} />
@@ -1155,19 +1126,7 @@ export function AuctionPage({
         )}
       </main>
 
-      <footer className={s.footer}>
-        <Logo />
-        <span>Недвижимость. С новой возможностью.</span>
-        <Link to="/map">Карта экранов</Link>
-        <Link
-          to="/auction/app"
-          onClick={() => goal('auction_role_switch', { target_role: 'seller' })}
-        >
-          Я продавец
-        </Link>
-        <Link to="/ui-kit">UI-kit</Link>
-        <span className={s.prototypeLabel}>Учебный прототип · Фото: Unsplash</span>
-      </footer>
+      {!preview && <AuctionFooter />}
 
       <Modal
         preview={preview}
@@ -1211,33 +1170,7 @@ export function AuctionPage({
         </div>
       </Modal>
 
-      <Modal preview={preview} open={help} title="Аукцион — всё по шагам" onClose={closeHelp}>
-        <div className={s.helpBody}>
-          <p>В учебном прототипе можно пройти обе роли. Переключатель находится вверху страницы.</p>
-          <h3>Если вы продавец</h3>
-          <ol>
-            <li>Укажите стартовую цену, шаг ставки и длительность.</li>
-            <li>Проверьте условия и опубликуйте аукцион.</li>
-            <li>Следите за принятыми ставками и итогами.</li>
-          </ol>
-          <h3>Если вы покупатель</h3>
-          <ol>
-            <li>Посмотрите квартиру и условия аукциона.</li>
-            <li>Предложите сумму не ниже минимальной.</li>
-            <li>Подтвердите ставку и дождитесь её статуса.</li>
-          </ol>
-          <div className={s.infoNote}>
-            <I name="shield" />
-            <p>
-              Побеждает самая высокая принятая ставка на момент окончания. Оплаты и юридического
-              оформления в прототипе нет.
-            </p>
-          </div>
-          <Button fullWidth onClick={closeHelp}>
-            Понятно
-          </Button>
-        </div>
-      </Modal>
+      <AuctionHelp preview={preview} open={help} onClose={closeHelp} />
 
       <Modal
         preview={preview}
@@ -1264,7 +1197,6 @@ export function AuctionPage({
               <I name="arrow" />
             </button>
           </div>
-          <p>Иллюстрации для учебного объекта · Unsplash</p>
         </div>
       </Modal>
 

@@ -1,0 +1,79 @@
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding: 12px 20px;
+  background: #fffffff5;
+  border-bottom: 1px solid #e7edf6;
+}
+.control {
+  display: flex;
+  max-width: 420px;
+  margin: auto;
+  padding: 4px;
+  gap: 4px;
+  border-radius: 12px;
+  background: #edf2fa;
+}
+.control button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px;
+  border: 0;
+  border-radius: 9px;
+  color: #5f708b;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.control button[aria-pressed='true'] {
+  color: #fff;
+  background: var(--control-main-primary-default, #0054fd);
+  box-shadow: 0 2px 6px #0054fd26;
+}
+.control button:hover:not(:disabled):not([aria-pressed='true']) {
+  color: var(--text-main-default, #0054fd);
+  background: #e0eaff;
+}
+.control button:focus-visible {
+  outline: 2px solid var(--stroke-control-focused, #0054fd);
+  outline-offset: 2px;
+}
+.control button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+@media (max-width: 360px) {
+  .bar {
+    padding-inline: 16px;
+  }
+  .control button {
+    font-size: 12px;
+    gap: 6px;
+  }
+}
+
+.preview {
+  position: static;
+  padding: 6px 12px;
+}
+.preview .control {
+  padding: 3px;
+  border-radius: 8px;
+}
+.preview .control button {
+  min-height: 28px;
+  padding: 3px;
+  font-size: 10px;
+  gap: 5px;
+  border-radius: 6px;
+}
+.preview .control svg {
+  width: 13px;
+  height: 13px;
+}

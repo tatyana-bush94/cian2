@@ -17,57 +17,6 @@
   outline: 2px solid var(--stroke-control-focused);
   outline-offset: 4px;
 }
-.header {
-  background: var(--background-primary);
-  border-bottom: 1px solid #e9edf4;
-}
-.headerInner {
-  max-width: 1192px;
-  margin: auto;
-  padding: 0 36px;
-  height: 82px;
-  display: flex;
-  align-items: center;
-  gap: 36px;
-}
-.logo {
-  display: block;
-  width: 112px;
-  height: auto;
-  flex: none;
-}
-.headerSection {
-  padding-left: 30px;
-  border-left: 1px solid #e7ebf2;
-  font-size: 13px;
-  color: #66748b;
-}
-.headerSection > span {
-  color: #c1c9d6;
-  margin-inline: 12px;
-}
-.helpButton {
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  background: transparent;
-  border: 0;
-  padding: 8px 0;
-  color: #71809a;
-  font-size: 12px;
-}
-.avatar {
-  display: grid;
-  place-items: center;
-  width: 35px;
-  height: 35px;
-  background: #ececfa;
-  color: #8176b4;
-  border-radius: 50%;
-  font-size: 14px;
-  flex: none;
-}
 .main {
   max-width: 1192px;
   padding: 45px 36px 25px;
@@ -660,36 +609,6 @@
   color: #aa742c;
   margin-top: 17px;
 }
-.footer {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 23px 0 0;
-  margin-top: 24px;
-  border-top: 1px solid #e7ecf5;
-  color: #a4afc1;
-}
-.footer > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  flex: none;
-  font-size: 10px;
-  color: #8b9bb4;
-}
-.footer p {
-  font-size: 9px;
-  line-height: 1.7;
-}
-.footer a {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin-left: auto;
-  font-size: 10px;
-  white-space: nowrap;
-  color: #7e96bd;
-}
 .modalContent {
   display: flex;
   flex-direction: column;
@@ -726,10 +645,6 @@
   .main {
     padding-inline: 28px;
   }
-  .headerInner {
-    padding-inline: 28px;
-    gap: 25px;
-  }
   .columns {
     gap: 24px;
     grid-template-columns: minmax(0, 0.95fr) minmax(0, 1fr);
@@ -760,25 +675,6 @@
   }
 }
 @media (max-width: 760px) {
-  .headerInner {
-    height: 65px;
-    padding-inline: 20px;
-    gap: 20px;
-  }
-  .logo {
-    width: 96px;
-  }
-  .headerSection {
-    display: none;
-  }
-  .helpButton {
-    font-size: 11px;
-  }
-  .avatar {
-    width: 30px;
-    height: 30px;
-    font-size: 12px;
-  }
   .main {
     padding: 28px 20px 20px;
   }
@@ -1016,18 +912,6 @@
     margin-left: 0;
     min-height: 38px;
   }
-  .footer {
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 22px;
-    padding-top: 18px;
-  }
-  .footer p {
-    flex-basis: 100%;
-    order: 2;
-    font-size: 9px;
-    max-width: 300px;
-  }
 }
 @media (max-width: 375px) {
   .main {
@@ -1058,14 +942,10 @@
 }
 
 /* Real workflow components in isolated, read-only map thumbnails. */
-.mapPreview .headerInner {
-  height: 55px;
-}
 .mapPreview .intro,
 .mapPreview .property,
 .mapPreview .trustLine,
 .mapPreview .practice,
-.mapPreview .footer,
 .mapPreview .storageWarning {
   display: none;
 }
@@ -1122,11 +1002,4 @@
 }
 .mapPreview .errorNotice p {
   font-size: 10px;
-}
-.sellerLabel > a {
-  margin-left: 10px;
-  padding-left: 10px;
-  border-left: 1px solid #dce5f4;
-  font-size: 10px;
-  white-space: nowrap;
 }

@@ -1,10 +1,34 @@
-import { useEffect, useState, type CSSProperties } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { AuctionIcon } from './AuctionIcon';
+import {
+  auctionAppPath,
+  auctionPreviewPath,
+  ROLE_MESSAGE,
+  type AuctionRole,
+} from './roleNavigation';
 import s from './IPhonePreview.module.css';
 
-export function IPhonePreview() {
+export function IPhonePreview({ role = 'seller' }: { role?: AuctionRole }) {
   const [scale, setScale] = useState(1);
+  const frame = useRef<HTMLIFrameElement>(null);
+  const navigate = useNavigate();
+  const roleLabel = role === 'buyer' ? 'покупателя' : 'продавца';
+
+  useEffect(() => {
+    function switchRole(event: MessageEvent) {
+      if (
+        event.origin !== window.location.origin ||
+        event.source !== frame.current?.contentWindow ||
+        event.data?.type !== ROLE_MESSAGE ||
+        !['buyer', 'seller'].includes(event.data?.role)
+      )
+        return;
+      navigate(auctionPreviewPath(event.data.role));
+    }
+    window.addEventListener('message', switchRole);
+    return () => window.removeEventListener('message', switchRole);
+  }, [navigate]);
 
   useEffect(() => {
     document.title = 'Аукцион в мобильном приложении · Циан';
@@ -29,13 +53,7 @@ export function IPhonePreview() {
             <span>Мобильный прототип</span>
           </div>
         </div>
-        <Link to="/map" className={s.fullscreen}>
-          Карта экранов ↗
-        </Link>
-        <Link to="/auction/buyer" className={s.fullscreen}>
-          Я покупатель ↗
-        </Link>
-        <Link to="/auction/app" className={s.fullscreen}>
+        <Link to={auctionAppPath(role)} className={s.fullscreen}>
           Открыть без рамки <AuctionIcon name="arrow" size={16} />
         </Link>
       </header>
@@ -88,9 +106,10 @@ export function IPhonePreview() {
                 </div>
               </div>
               <iframe
+                ref={frame}
                 className={s.appFrame}
-                src="/auction/app"
-                title="Мобильное приложение Циан — сценарий продавца"
+                src={auctionAppPath(role)}
+                title={`Мобильное приложение Циан — сценарий ${roleLabel}`}
               />
               <div className={s.homeArea} aria-hidden="true">
                 <span />
@@ -100,8 +119,8 @@ export function IPhonePreview() {
         </div>
         <p className={s.caption}>
           <span />
-          iPhone · Сценарий продавца<span className={s.captionDivider}>/</span>Интерактивный
-          прототип
+          iPhone · Сценарий {roleLabel}
+          <span className={s.captionDivider}>/</span>Интерактивный прототип
         </p>
       </div>
     </main>

@@ -1,9 +1,17 @@
 import { useEffect, useReducer, useRef, useState, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
 import { newEventId, restartFlow, trackGoal, useScreenGoal } from '@/analytics/auction';
 import { PREVIEW_NOW, sellerPreview } from './map/preview';
-import { Badge, Button, Checkbox, Input, Modal, Select } from '@/ui';
+import { Badge, Checkbox, Input, Modal, Select } from '@/ui';
+import {
+  AuctionButton as Button,
+  AuctionHeader,
+  AuctionFooter,
+  AuctionHelp,
+} from './AuctionChrome';
+import c from './AuctionChrome.module.css';
 import { AuctionIcon as I } from './AuctionIcon';
+import { RoleSwitcher } from './RoleSwitcher';
+import { useAuctionRoleNavigation } from './roleNavigation';
 import {
   BID_STEPS,
   DURATIONS,
@@ -24,6 +32,7 @@ const steps = ['Условия', 'Проверка', 'Публикация'];
 
 export function SellerAuctionPage({ previewScreen }: { previewScreen?: string }) {
   const preview = !!previewScreen;
+  const navigateRole = useAuctionRoleNavigation();
   const [state, dispatch] = useReducer(sellerReducer, undefined, () =>
     previewScreen ? sellerPreview(previewScreen) : initialSellerState(),
   );
@@ -190,31 +199,27 @@ export function SellerAuctionPage({ previewScreen }: { previewScreen?: string })
           : 'Аукцион запущен — теперь покупатели могут делать ставки.';
 
   return (
-    <div className={`${s.app} ${preview ? s.mapPreview : ''}`}>
+    <div className={`${c.app} ${s.app} ${preview ? s.mapPreview : ''}`}>
       <a href="#seller-main" className="skip-link">
         К содержимому
       </a>
-      <header className={s.header}>
-        <div className={s.headerInner}>
-          <img className={s.logo} src="/images/cian-logo.svg" alt="Циан" width="112" height="28" />
-          <span className={s.headerSection}>
-            Моё объявление <span>/</span> Аукцион
-          </span>
-          <button
-            className={s.helpButton}
-            onClick={() => {
-              goal('auction_help_open');
-              setHelp(true);
-            }}
-          >
-            <I name="info" size={17} />
-            <span>Как это работает</span>
-          </button>
-          <span className={s.avatar} aria-label="Профиль Татьяны">
-            Т
-          </span>
-        </div>
-      </header>
+      <AuctionHeader
+        preview={preview}
+        onHelp={() => {
+          goal('auction_help_open');
+          setHelp(true);
+        }}
+      />
+
+      <RoleSwitcher
+        preview={preview}
+        role="seller"
+        disabled={pending}
+        onChange={(role) => {
+          goal('auction_role_switch', { target_role: role });
+          if (!preview) navigateRole(role);
+        }}
+      />
 
       <main id="seller-main" className={s.main}>
         <div className={s.intro}>
@@ -231,12 +236,6 @@ export function SellerAuctionPage({ previewScreen }: { previewScreen?: string })
           <span className={s.sellerLabel}>
             <I name="home" size={16} />
             Вы — продавец
-            <Link
-              to="/auction/buyer"
-              onClick={() => goal('auction_role_switch', { target_role: 'buyer' })}
-            >
-              Я покупатель ↗
-            </Link>
           </span>
         </div>
 
@@ -295,7 +294,7 @@ export function SellerAuctionPage({ previewScreen }: { previewScreen?: string })
           </section>
 
           <section
-            className={s.workflow}
+            className={`${c.card} ${s.workflow}`}
             aria-label={
               stage === 'conditions'
                 ? 'Настройка аукциона'
@@ -631,50 +630,11 @@ export function SellerAuctionPage({ previewScreen }: { previewScreen?: string })
             перезагрузки данные будут потеряны.
           </p>
         )}
-        <footer className={s.footer}>
-          <span>
-            <I name="info" size={15} />
-            Учебный прототип
-          </span>
-          <p>Реальной публикации на Циане нет. Оплата и оформление сделки не предусмотрены.</p>
-          <Link to="/map">Карта экранов</Link>
-          <Link
-            to="/auction/buyer"
-            onClick={() => goal('auction_role_switch', { target_role: 'buyer' })}
-          >
-            Я покупатель
-          </Link>
-          <Link to="/ui-kit">
-            UI-kit <I name="arrow" size={14} />
-          </Link>
-        </footer>
       </main>
 
-      <Modal preview={preview} open={help} title="Как продать на аукционе" onClose={closeHelp}>
-        <div className={s.modalContent}>
-          <ol>
-            <li>
-              <strong>Задайте условия.</strong> Укажите стартовую цену, выберите шаг ставки и срок:
-              1, 3 или 7 дней.
-            </li>
-            <li>
-              <strong>Проверьте всё.</strong> До публикации можно вернуться и изменить любое
-              значение.
-            </li>
-            <li>
-              <strong>Запустите аукцион.</strong> После подтверждения он начнётся сразу. Условия
-              больше не редактируются.
-            </li>
-          </ol>
-          <p>
-            Побеждает самая высокая принятая ставка к моменту окончания. Это учебный сценарий
-            продавца: реальные покупатели, платежи и оформление не подключены.
-          </p>
-          <Button fullWidth onClick={closeHelp}>
-            Понятно
-          </Button>
-        </div>
-      </Modal>
+      {!preview && <AuctionFooter />}
+
+      <AuctionHelp preview={preview} open={help} onClose={closeHelp} />
       <Modal preview={preview} open={resetOpen} title="Начать заново?" onClose={closeReset}>
         <div className={s.modalContent}>
           <p>Текущий учебный аукцион будет заменён новым черновиком с начальными условиями.</p>

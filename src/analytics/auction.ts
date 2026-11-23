@@ -35,6 +35,7 @@ declare global {
 // Replace with a real counter ID and initialize the official tag when connecting Metrika.
 // Zero means local debug mode: no tag is loaded and no requests leave the browser.
 export const METRIKA_COUNTER_ID: number = 0;
+const JOURNAL_KEY = 'auction-analytics-journal';
 let fallbackSession = '';
 const flows: Partial<Record<AuctionRole, string>> = {};
 export const newEventId = () =>
@@ -72,6 +73,39 @@ export function restartFlow(role: AuctionRole) {
   }
 }
 
+export function readGoals(): GoalRecord[] {
+  try {
+    const saved: unknown = JSON.parse(sessionStorage.getItem(JOURNAL_KEY) || 'null');
+    if (Array.isArray(saved)) {
+      return saved
+        .filter(
+          (record): record is GoalRecord =>
+            record &&
+            typeof record.event_id === 'string' &&
+            typeof record.goal === 'string' &&
+            typeof record.timestamp === 'number' &&
+            record.params &&
+            ['seller', 'buyer'].includes(record.params.role) &&
+            typeof record.params.screen === 'string',
+        )
+        .slice(-200);
+    }
+  } catch {
+    /* Use the in-memory journal if storage is unavailable. */
+  }
+  return window.__auctionGoals ?? [];
+}
+
+export function clearGoals() {
+  window.__auctionGoals = [];
+  try {
+    sessionStorage.removeItem(JOURNAL_KEY);
+  } catch {
+    /* The memory journal is cleared. */
+  }
+  window.dispatchEvent(new CustomEvent('auction:goal'));
+}
+
 export function trackGoal(goal: string, params: GoalParams) {
   const eventId = newEventId();
   const timestamp = Date.now();
@@ -89,8 +123,25 @@ export function trackGoal(goal: string, params: GoalParams) {
     },
   };
   // Bounded journal for local verification. No prices, addresses or personal data.
-  window.__auctionGoals = [...(window.__auctionGoals ?? []).slice(-199), record];
+  window.__auctionGoals = [...readGoals().slice(-199), record];
+  try {
+    sessionStorage.setItem(JOURNAL_KEY, JSON.stringify(window.__auctionGoals));
+  } catch {
+    /* Keep recording in memory. */
+  }
   window.dispatchEvent(new CustomEvent('auction:goal', { detail: record }));
+  // The phone application and its presentation share one same-origin tab journal.
+  // Only the application sends reachGoal; mirroring the journal sends no second goal.
+  if (window.parent !== window) {
+    try {
+      if (window.parent.location.origin === window.location.origin) {
+        window.parent.__auctionGoals = window.__auctionGoals;
+        window.parent.dispatchEvent(new CustomEvent('auction:goal', { detail: record }));
+      }
+    } catch {
+      /* Cross-origin embedding does not affect the scenario. */
+    }
+  }
   if (METRIKA_COUNTER_ID > 0 && typeof window.ym === 'function') {
     try {
       window.ym(METRIKA_COUNTER_ID, 'reachGoal', goal, record.params);

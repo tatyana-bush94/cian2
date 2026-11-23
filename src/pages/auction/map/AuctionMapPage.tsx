@@ -1,6 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { METRIKA_COUNTER_ID, type AuctionRole, type GoalRecord } from '@/analytics/auction';
+import {
+  METRIKA_COUNTER_ID,
+  readGoals,
+  clearGoals,
+  type AuctionRole,
+  type GoalRecord,
+} from '@/analytics/auction';
+import { auctionAppPath, auctionPreviewPath } from '../roleNavigation';
 import { metrics } from './metrics';
 import { screens, transitions, getScreen, type ScenarioScreen, type Transition } from './scenario';
 import s from './AuctionMapPage.module.css';
@@ -151,7 +158,7 @@ function FlowMap({
   const height =
     (Math.max(...group.map((screen) => screen.row)) + 1) * (CARD_H + GAP_Y) - GAP_Y + 125;
   const selectedInGroup = group.some((screen) => screen.id === selected);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const element = viewport.current;
     if (!element) return;
     const resize = () => setZoom(Math.min(1, Math.max(0.3, (element.clientWidth - 20) / WIDTH)));
@@ -289,9 +296,9 @@ function FlowMap({
 }
 
 function EventJournal() {
-  const [records, setRecords] = useState<GoalRecord[]>(() => window.__auctionGoals ?? []);
+  const [records, setRecords] = useState<GoalRecord[]>(() => readGoals());
   useEffect(() => {
-    const receive = () => setRecords([...(window.__auctionGoals ?? [])]);
+    const receive = () => setRecords(readGoals());
     window.addEventListener('auction:goal', receive);
     return () => window.removeEventListener('auction:goal', receive);
   }, []);
@@ -302,7 +309,7 @@ function EventJournal() {
         <span>{records.length} событий · последние 200</span>
         <button
           onClick={() => {
-            window.__auctionGoals = [];
+            clearGoals();
             setRecords([]);
           }}
         >
@@ -326,9 +333,9 @@ function EventJournal() {
         </ol>
       ) : (
         <p>
-          Откройте сценарий по кнопке выше, пройдите несколько шагов и вернитесь сюда. Журнал
-          сохраняется при переходах внутри прототипа. Для проверки из консоли:{' '}
-          <code>window.__auctionGoals</code>.
+          Откройте сценарий по кнопке выше, пройдите несколько шагов и вернитесь сюда. Журнал общий
+          для приложения в рамке и карты; сохраняется при смене роли и обновлении страницы в этой
+          вкладке. Для проверки из консоли: <code>window.__auctionGoals</code>.
         </p>
       )}
     </div>
@@ -369,7 +376,7 @@ export function AuctionMapPage() {
         </nav>
         <span className={s.draftBadge}>
           <i />
-          Прототип · v1.0
+          Прототип · v1.1
         </span>
       </header>
       <main id="map-main">
@@ -387,13 +394,18 @@ export function AuctionMapPage() {
               Экраны, переходы и события, которые помогут проверить идею.
             </p>
             <div className={s.heroActions}>
-              <Link className={s.primaryLink} to="/auction/app">
+              <Link className={s.primaryLink} to={auctionPreviewPath('seller')}>
                 Пройти за продавца <span>↗</span>
               </Link>
-              <Link className={s.secondaryLink} to="/auction/buyer">
+              <Link className={s.secondaryLink} to={auctionPreviewPath('buyer')}>
                 Пройти за покупателя <span>↗</span>
               </Link>
             </div>
+            <p className={s.directLinks}>
+              Без рамки:
+              <Link to={auctionAppPath('seller')}>продавец ↗</Link>
+              <Link to={auctionAppPath('buyer')}>покупатель ↗</Link>
+            </p>
           </div>
           <aside className={s.heroNote}>
             <span className={s.noteIcon}>⌘</span>
@@ -476,8 +488,9 @@ export function AuctionMapPage() {
             <strong>Один объект, две роли</strong>
             <p>
               «Я покупатель» и «Я продавец» → <code>auction_role_switch</code> · <code>role</code> —
-              исходная роль, <code>target_role</code> — новая. Условия и <code>auction_id</code>{' '}
-              передаются из опубликованного аукциона.
+              исходная роль, <code>target_role</code> — новая. Переключатель закреплён сверху и
+              недоступен во время отправки. Черновик и принятые ставки сохраняются, рамка остаётся
+              одной. Условия и <code>auction_id</code> передаются из опубликованного аукциона.
             </p>
           </div>
         </div>
