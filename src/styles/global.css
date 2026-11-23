@@ -1,4 +1,25 @@
 @font-face {
+  font-family: 'Grtsk Peta';
+  src: url('/fonts/grtsk-peta-regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Grtsk Peta';
+  src: url('/fonts/grtsk-peta-medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Grtsk Peta';
+  src: url('/fonts/grtsk-peta-semibold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
   font-family: Lato;
   src: url('/reference/assets/fonts/lato-regular.woff2') format('woff2');
   font-weight: 400;
@@ -16,12 +37,31 @@
   font-weight: 700;
   font-display: swap;
 }
+:root {
+  --brand-blue: #0054fd;
+  --control-main-primary-default: var(--brand-blue);
+  --control-main-primary-hovered: #004be4;
+  --control-main-primary-pressed: #0042cb;
+  --control-main-secondary-default: #edf3ff;
+  --control-main-secondary-hovered: #e0ebff;
+  --control-main-secondary-pressed: #d5e3ff;
+  --text-main-default: var(--brand-blue);
+  --text-main-hovered: #004be4;
+  --text-main-pressed: #0042cb;
+  --icon-main-default: var(--brand-blue);
+  --icon-main-hovered: #004be4;
+  --icon-main-pressed: #0042cb;
+  --stroke-control-focused: var(--brand-blue);
+  --stroke-border-main: var(--brand-blue);
+}
 * {
   box-sizing: border-box;
 }
 body {
   margin: 0;
-  font-family: Lato, Arial, sans-serif;
+  font-family: 'Grtsk Peta', Lato, Arial, sans-serif;
+  font-weight: 400;
+  font-synthesis: none;
   color: var(--text-primary-default);
   background: var(--background-primary);
   font-size: 16px;
@@ -32,6 +72,19 @@ input,
 select,
 textarea {
   font: inherit;
+}
+button,
+strong,
+b {
+  font-weight: 500;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 600;
 }
 button,
 a,
@@ -82,7 +135,7 @@ fieldset {
 }
 legend {
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   margin-bottom: 8px;
 }
 ::selection {
