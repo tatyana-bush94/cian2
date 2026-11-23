@@ -3,7 +3,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '@/App';
-import { METRIKA_COUNTER_ID, trackGoal } from '@/analytics/auction';
+import { METRIKA_COUNTER_ID, trackGoal, readGoals, clearGoals } from '@/analytics/auction';
 import { SellerAuctionPage } from '../SellerAuctionPage';
 import { AuctionPage } from '../AuctionPage';
 import { SELLER_STORAGE_KEY } from '../sellerModel';
@@ -62,6 +62,20 @@ describe('auction analytics and scenario map', () => {
     expect(window.ym).not.toHaveBeenCalled();
   });
 
+  it('retains the shared tab journal across application reloads and clears it consistently', () => {
+    const record = trackGoal('auction_role_switch', {
+      role: 'seller',
+      step: 1,
+      screen: 'seller_conditions',
+      target_role: 'buyer',
+    });
+    delete window.__auctionGoals;
+    expect(readGoals()).toEqual([record]);
+    clearGoals();
+    expect(readGoals()).toEqual([]);
+    expect(window.__auctionGoals).toEqual([]);
+  });
+
   it('joins publication results to attempts; retry has a new id and restored success is not a new conversion', () => {
     const page = mount(<SellerAuctionPage />);
     fireEvent.click(screen.getByLabelText('Смоделировать ошибку следующей публикации'));
@@ -96,7 +110,7 @@ describe('auction analytics and scenario map', () => {
     publish();
     act(() => vi.advanceTimersByTime(1200));
     const publication = goals('auction_publish_success')[0];
-    fireEvent.click(screen.getByRole('link', { name: 'Я покупатель' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Я покупатель' }));
     expect(screen.getByLabelText('Ваша ставка, ₽')).toHaveValue(digits(17_000_000));
     expect(goals('auction_screen_view').at(-1)?.params).toMatchObject({
       role: 'buyer',
@@ -189,6 +203,18 @@ describe('auction analytics and scenario map', () => {
     );
     expect(screen.getByRole('heading', { name: /Весь сценарий/ })).toBeInTheDocument();
     expect(screen.getAllByTitle(/Миниатюра:/)).toHaveLength(30);
+    expect(screen.getByRole('link', { name: 'Пройти за продавца ↗' })).toHaveAttribute(
+      'href',
+      '/auction',
+    );
+    expect(screen.getByRole('link', { name: 'Пройти за покупателя ↗' })).toHaveAttribute(
+      'href',
+      '/auction/buyer',
+    );
+    expect(screen.getByRole('link', { name: 'покупатель ↗' })).toHaveAttribute(
+      'href',
+      '/auction/buyer/app',
+    );
     fireEvent.change(screen.getByLabelText('Поиск события'), {
       target: { value: 'auction_publish_error' },
     });

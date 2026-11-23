@@ -10,7 +10,8 @@ export default function App() {
     <Routes>
       <Route path="/map" element={<AuctionMapPage />} />
       <Route path="/map/preview/:screen" element={<MapPreview />} />
-      <Route path="/auction/buyer" element={<AuctionPage initialRole="buyer" />} />
+      <Route path="/auction/buyer" element={<IPhonePreview role="buyer" />} />
+      <Route path="/auction/buyer/app" element={<AuctionPage initialRole="buyer" />} />
       <Route path="/ui-kit" element={<UIKitPage />} />
       <Route path="/auction/app" element={<SellerAuctionPage />} />
       <Route path="*" element={<IPhonePreview />} />

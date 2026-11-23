@@ -1049,3 +1049,16 @@
     transition: none;
   }
 }
+
+.hero .directLinks {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  font-size: 9px;
+  color: #91a0b5;
+  margin-top: 12px;
+}
+.directLinks a {
+  color: #6f87ac;
+}
