@@ -1,0 +1,12 @@
+@font-face{font-family:'Brand Sans';src:url(fonts/Manrope-Variable.ttf) format('truetype');font-weight:200 800;font-style:normal;font-display:block}
+:root{
+  --font:'Brand Sans',system-ui,sans-serif;
+  --w-regular:400;--w-medium:500;--w-bold:650;
+  --accent:#0054fd;--accent-ink:#fff;
+  --ink:#101a34;--ink2:#7e8da5;--ink3:#9ba9bf;
+  --line:#dce4f0;--line2:#d9e2f1;--soft:#edf3ff;
+  --dark:#101a34;--surface:#fff;--bg:#f6f8fc;
+  --dim:16,26,52;--sub-bg:rgba(16,26,52,.86);
+  --cursor:#101a34;--r-app:0px;
+  --ring-stops:#0054fd,#8eafff,#0054fd;
+}
