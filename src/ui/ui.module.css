@@ -241,3 +241,24 @@
     animation: none;
   }
 }
+
+.modalPreview {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background: #15274766;
+}
+.modalPreview > .modal {
+  display: block;
+  position: relative;
+  inset: auto;
+  margin: 0;
+  max-height: 100%;
+  width: 100%;
+  overflow: hidden;
+  font-size: 12px;
+}
